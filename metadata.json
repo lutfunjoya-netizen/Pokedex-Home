@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Pokémon Database",
+  "description": "An interactive Pokémon database application that fetches and displays detailed information about Pokémon, including their stats, abilities, evolutionary chains, and more, using the PokeAPI.",
+  "requestFramePermissions": []
+}
