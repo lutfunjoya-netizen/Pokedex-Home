@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { FullPokemonDetails } from '../types';
 import { LoadingSpinner } from './common/LoadingSpinner';
 import { TypeBadge } from './common/TypeBadge';
@@ -16,6 +16,24 @@ interface PokemonDetailViewProps {
 
 export const PokemonDetailView: React.FC<PokemonDetailViewProps> = ({ pokemon, isLoading, error }) => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // This effect creates and manages the audio instance.
+    // It runs only when the selected Pokémon (and its cryUrl) changes.
+    useEffect(() => {
+        if (pokemon?.cryUrl) {
+            audioRef.current = new Audio(pokemon.cryUrl);
+        }
+
+        // Cleanup function: This runs when the component unmounts or before the effect runs again for a new Pokémon.
+        // It stops any currently playing audio from the previous Pokémon.
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, [pokemon?.cryUrl]);
+
 
     if (isLoading) {
         return (
@@ -54,14 +72,16 @@ export const PokemonDetailView: React.FC<PokemonDetailViewProps> = ({ pokemon, i
     };
 
     const playCry = () => {
-        if (!pokemon?.cryUrl) return;
+        // The playCry function now only interacts with the existing audio object.
         if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
+            audioRef.current.currentTime = 0; // Rewind to start
+            audioRef.current.play().catch(e => {
+                // Ignore the specific "AbortError" which is expected if the user clicks very fast.
+                if (e.name !== 'AbortError') {
+                    console.error("Error playing audio:", e);
+                }
+            });
         }
-        const cryAudio = new Audio(pokemon.cryUrl);
-        cryAudio.play().catch(e => console.error("Error playing audio:", e));
-        audioRef.current = cryAudio;
     };
 
     return (
